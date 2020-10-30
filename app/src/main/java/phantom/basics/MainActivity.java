@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void stop(View view) {
         System.out.println("~~button.stop~~");
+        startActivity(new Intent(this, UIActivity.class));
     }
 
     public void bind(View view) {
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         if (missingPermission.isEmpty()) {
 //            startSDKRegistration();
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            showToast("Need to grant the permissions!");
+            log("Need to grant the permissions!");
             ActivityCompat.requestPermissions(this,
                     missingPermission.toArray(new String[missingPermission.size()]),
                     REQUEST_PERMISSION_CODE);
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("Permission is ok!");
 //            startSDKRegistration();
         } else {
-            showToast("Missing permissions!!!");
+            log("Missing permissions!!!");
         }
     }
 
@@ -225,55 +226,55 @@ public class MainActivity extends AppCompatActivity {
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    showToast("registering, pls wait...");
+                    log("registering, pls wait...");
 
-                    System.out.println("registerApp start");
+                    log("registerApp start");
                     DJISDKManager.getInstance().registerApp(MainActivity.this.getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
                         @Override
                         public void onRegister(DJIError djiError) {
-                            System.out.println("~~SDKManagerCallback.onRegister~~");
+                            log("~~SDKManagerCallback.onRegister~~");
                             if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                showToast("Register Success");
+                                log("Register Success");
                                 DJISDKManager.getInstance().startConnectionToProduct();
                             } else {
-                                showToast("Register sdk fails, please check the bundle id and network connection!");
+                                log("Register sdk fails, please check the bundle id and network connection!");
                             }
                             Log.v(TAG, djiError.getDescription());
                         }
 
                         @Override
                         public void onProductDisconnect() {
-                            System.out.println("~~SDKManagerCallback.onProductDisconnect~~");
+                            log("~~SDKManagerCallback.onProductDisconnect~~");
                             Log.d(TAG, "onProductDisconnect");
-                            showToast("Product Disconnected");
+                            log("Product Disconnected");
                             notifyStatusChange();
 
                         }
                         @Override
                         public void onProductConnect(BaseProduct baseProduct) {
-                            System.out.println("~~SDKManagerCallback.onProductConnect~~");
+                            log("~~SDKManagerCallback.onProductConnect~~");
                             Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
-                            showToast("Product Connected");
+                            log("Product Connected");
                             notifyStatusChange();
 
                         }
 
                         @Override
                         public void onProductChanged(BaseProduct baseProduct) {
-                            System.out.println("~~SDKManagerCallback.onProductChanged~~");
+                            log("~~SDKManagerCallback.onProductChanged~~");
 
                         }
 
                         @Override
                         public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent, BaseComponent newComponent) {
-                            System.out.println("~~SDKManagerCallback.onComponentChange~~");
+                            log("~~SDKManagerCallback.onComponentChange~~");
 
                             if (newComponent != null) {
                                 newComponent.setComponentListener(new BaseComponent.ComponentListener() {
 
                                     @Override
                                     public void onConnectivityChange(boolean isConnected) {
-                                        System.out.println("~~ComponentListener.onConnectivityChange~~");
+                                        log("~~ComponentListener.onConnectivityChange~~");
                                         Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
                                         notifyStatusChange();
                                     }
@@ -289,13 +290,13 @@ public class MainActivity extends AppCompatActivity {
 
                         @Override
                         public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-                            System.out.println("~~SDKManagerCallback.onInitProcess~~");
+                            log("~~SDKManagerCallback.onInitProcess~~");
 
                         }
 
                         @Override
                         public void onDatabaseDownloadProgress(long l, long l1) {
-                            System.out.println("~~SDKManagerCallback.onDatabaseDownloadProgress~~");
+                            log("~~SDKManagerCallback.onDatabaseDownloadProgress~~");
 
                         }
 
@@ -320,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void showToast(final String toastMsg) {
+    private void log(final String toastMsg) {
 
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
@@ -328,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 System.out.println("LOG|" + toastMsg);
                 Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
+
             }
         });
 

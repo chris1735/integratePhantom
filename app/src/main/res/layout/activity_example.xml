@@ -97,14 +97,19 @@
         app:constraint_referenced_ids="button2,button14,button12,button15,button13,button11,button3,button10"
         tools:layout_editor_absoluteY="731dp" />
 
-    <TextView
-        android:id="@+id/textView"
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:text="TextView"
-        app:layout_constraintTop_toBottomOf="@id/barrier2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrier2">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="" />
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
