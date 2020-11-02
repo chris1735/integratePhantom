@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
     public static final String FLAG_CONNECTION_CHANGE = "dji_sdk_connection_change";
     private static BaseProduct mProduct;
+    private TextView textView;
     private Handler mHandler;
 
     private static final String[] REQUIRED_PERMISSION_LIST = new String[]{
@@ -70,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
         //Initialize DJI SDK Manager
         mHandler = new Handler(Looper.getMainLooper());
+
+        textView = findViewById(R.id.textView);
 
     }
 
@@ -146,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void bind(View view) {
         System.out.println("~~button.bind~~");
+        startActivity(new Intent(this, PreviewActivity.class));
 
     }
 
@@ -328,7 +333,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 System.out.println("LOG|" + toastMsg);
-                Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
+//                Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
+
+                textView.setText(textView.getText() + "\n" + toastMsg);
 
             }
         });

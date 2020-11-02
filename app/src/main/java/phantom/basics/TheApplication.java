@@ -17,6 +17,8 @@ import com.secneo.sdk.Helper;
  */
 public class TheApplication extends Application {
 
+    private FPVApplication fpvApplication;
+
     public TheApplication() {
         super();
         System.out.println("------ " + getClass().getSimpleName() + ".Constructor  ------");

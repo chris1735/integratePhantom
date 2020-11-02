@@ -1,35 +1,46 @@
 package phantom.basics;
 
 import android.Manifest;
+import android.graphics.SurfaceTexture;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
+import dji.common.product.Model;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
+import dji.sdk.camera.VideoFeeder;
+import dji.sdk.codec.DJICodecManager;
+import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 
 /**
  * Copyright (C) 湖北无垠智探科技发展有限公司
  * Author: zuoz
- * Date: 2020/10/30 18:39
+ * Date: 2020/12/3 8:39
  * Description:
  * History:
  */
 public class PreviewActivity extends AppCompatActivity {
 
     private TextView textView;
+    private TextureView textureView;
+    private BaseProduct baseProduct;
+    private DJICodecManager mCodecManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +61,51 @@ public class PreviewActivity extends AppCompatActivity {
                     , 1);
         }
 
-        setContentView(R.layout.activity_example);
-
+        setContentView(R.layout.activity_preview);
         textView = findViewById(R.id.textView);
+        textureView = findViewById(R.id.textureView);
+        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                log("~~SurfaceTextureListener.onSurfaceTextureAvailable~~");
+                log("surface is " + surface);
+                log("width is " + width);
+                log("height is " + height);
+
+                if (mCodecManager == null) {
+                    mCodecManager = new DJICodecManager(PreviewActivity.this, surface, width, height);
+                }
+
+
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                log("~~SurfaceTextureListener.onSurfaceTextureSizeChanged~~");
+
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                log("~~SurfaceTextureListener.onSurfaceTextureDestroyed~~");
+
+
+                if (mCodecManager != null) {
+                    mCodecManager.cleanSurface();
+                    mCodecManager = null;
+                }
+
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+//                log("~~SurfaceTextureListener.onSurfaceTextureUpdated~~");
+
+            }
+        });
+
+
     }
 
 
@@ -127,11 +180,28 @@ public class PreviewActivity extends AppCompatActivity {
         System.out.println("~~button.stop~~");
 
 
+        if (!baseProduct.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
+            VideoFeeder.getInstance().getPrimaryVideoFeed().addVideoDataListener(new VideoFeeder.VideoDataListener() {
+                @Override
+                public void onReceive(byte[] bytes, int i) {
+                    log("~~addVideoDataListener.onReceive~~");
+                    log("bytes is " + bytes.length);
+                    log("i is " + i);
+
+                    if (mCodecManager != null) {
+                        log("mCodecManager is " + mCodecManager);
+//                        mCodecManager.sendDataToDecoder(bytes, i);
+                    }
+
+                }
+            });
+        }
 
     }
 
     public void bind(View view) {
         System.out.println("~~button.bind~~");
+
 
     }
 
@@ -172,7 +242,7 @@ public class PreviewActivity extends AppCompatActivity {
                     public void onRegister(DJIError djiError) {
                         log("~~SDKManagerCallback.onRegister~~");
                         if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                            log("Register Success");
+                            log("Register Success, and starting connection to product");
                             DJISDKManager.getInstance().startConnectionToProduct();
                         } else {
                             log("Register sdk fails, please check the bundle id and network connection!");
@@ -193,6 +263,15 @@ public class PreviewActivity extends AppCompatActivity {
                         log(String.format("onProductConnect newProduct:%s", baseProduct));
                         log("Product Connected");
 
+                        if (null != baseProduct && baseProduct.isConnected()) {
+                            log("refreshSDK: True");
+                            String str = baseProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
+                            log("Status: " + str + " connected");
+                            PreviewActivity.this.baseProduct = baseProduct;
+
+                        } else {
+                            log("refreshSDK: False");
+                        }
 
                     }
 
@@ -252,4 +331,100 @@ public class PreviewActivity extends AppCompatActivity {
         });
     }
 
+
+
+//    private void captureAction(){
+//        final Camera camera = null
+//        if (camera != null) {
+//
+//            SettingsDefinitions.ShootPhotoMode photoMode = SettingsDefinitions.ShootPhotoMode.SINGLE;
+//
+////            camera.setShootPhotoMode(photoMode, new CommonCallbacks.CompletionCallback(){
+////                @Override
+////                public void onResult(DJIError djiError) {
+////                    if (null == djiError) {
+////                        handler.postDelayed(new Runnable() {
+////                            @Override
+////                            public void run() {
+////                                camera.startShootPhoto(new CommonCallbacks.CompletionCallback() {
+////                                    @Override
+////                                    public void onResult(DJIError djiError) {
+////                                        if (djiError == null) {
+////                                            showToast("take photo: success");
+////                                        } else {
+////                                            showToast(djiError.getDescription());
+////                                        }
+////                                    }
+////                                });
+////                            }
+////                        }, 2000);
+////                    }
+////                }
+////            });
+//        }
+//    }
+
+
+
+    private void recordAction(SettingsDefinitions.CameraMode cameraMode){
+
+//        Camera camera = FPVDemoApplication.getCameraInstance();
+//        if (camera != null) {
+//            camera.setMode(cameraMode, new CommonCallbacks.CompletionCallback() {
+//                @Override
+//                public void onResult(DJIError error) {
+//
+//                    if (error == null) {
+//                        showToast("Switch Camera Mode Succeeded");
+//                    } else {
+//                        showToast(error.getDescription());
+//                    }
+//                }
+//            });
+//        }
+
+//        private void startRecord(){
+//
+//            final Camera camera = FPVDemoApplication.getCameraInstance();
+//            if (camera != null) {
+//                camera.startRecordVideo(new CommonCallbacks.CompletionCallback(){
+//                    @Override
+//                    public void onResult(DJIError djiError)
+//                    {
+//                        if (djiError == null) {
+//                            showToast("Record video: success");
+//                        }else {
+//                            showToast(djiError.getDescription());
+//                        }
+//                    }
+//                }); // Execute the startRecordVideo API
+//            }
+//        }
+
+
+//        private void stopRecord(){
+//
+//            Camera camera = FPVDemoApplication.getCameraInstance();
+//            if (camera != null) {
+//                camera.stopRecordVideo(new CommonCallbacks.CompletionCallback(){
+//
+//                    @Override
+//                    public void onResult(DJIError djiError)
+//                    {
+//                        if(djiError == null) {
+//                            showToast("Stop recording: success");
+//                        }else {
+//                            showToast(djiError.getDescription());
+//                        }
+//                    }
+//                }); // Execute the stopRecordVideo API
+//            }
+//
+//        }
+
+
+
+    }
+
 }
+
