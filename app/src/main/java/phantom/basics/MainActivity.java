@@ -1,10 +1,5 @@
 package phantom.basics;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,8 +10,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,34 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.textView);
 
+
+        ViewGroup viewGroup = findViewById(R.id.ll);
+
+
+
+
+
+        Class<?>[] classes = new Class<?>[]{
+                PreviewActivity.class,
+                LoginActivity.class,
+                GimbalActivity.class,
+        };
+
+        for (int i = 0; i < classes.length; i++) {
+
+            Button button = new Button(this);
+            int finalI = i;
+            button.setText(classes[finalI].getSimpleName());
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    System.out.println("~~onClick~~");
+                    startActivity(new Intent(MainActivity.this, classes[finalI]));
+                }
+            });
+            viewGroup.addView(button);
+
+        }
     }
 
 
@@ -145,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void stop(View view) {
         System.out.println("~~button.stop~~");
-        startActivity(new Intent(this, UIActivity.class));
+        startActivity(new Intent(this, LoginActivity.class));
     }
 
     public void bind(View view) {

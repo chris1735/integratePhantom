@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.TextView;
@@ -15,33 +14,48 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import java.util.Map;
+
 import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
+import dji.common.gimbal.CapabilityKey;
+import dji.common.gimbal.GimbalMode;
+import dji.common.gimbal.GimbalState;
+import dji.common.gimbal.Rotation;
 import dji.common.product.Model;
 import dji.common.util.CommonCallbacks;
+import dji.common.util.DJIParamCapability;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.camera.Camera;
 import dji.sdk.camera.VideoFeeder;
 import dji.sdk.codec.DJICodecManager;
+import dji.sdk.gimbal.Gimbal;
 import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 
+import static dji.common.gimbal.Axis.YAW;
+import static dji.common.gimbal.ResetDirection.CENTER;
+import static dji.common.gimbal.ResetDirection.UP_OR_DOWN;
+import static dji.common.gimbal.RotationMode.ABSOLUTE_ANGLE;
+import static dji.common.gimbal.RotationMode.RELATIVE_ANGLE;
+
 /**
  * Copyright (C) 湖北无垠智探科技发展有限公司
  * Author: zuoz
- * Date: 2020/12/3 8:39
+ * Date: 2020/12/4 17:18
  * Description:
  * History:
  */
-public class PreviewActivity extends AppCompatActivity {
+public class GimbalActivity extends AppCompatActivity {
 
     private TextView textView;
     private TextureView textureView;
     private BaseProduct baseProduct;
     private DJICodecManager mCodecManager;
+    float pitch = 20.0f, roll = 0.0f, yaw = 20.0f;
 
 
     @Override
@@ -63,7 +77,7 @@ public class PreviewActivity extends AppCompatActivity {
                     , 1);
         }
 
-        setContentView(R.layout.activity_preview);
+        setContentView(R.layout.activity_gimbal);
         textView = findViewById(R.id.textView);
         textureView = findViewById(R.id.textureView);
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -79,6 +93,7 @@ public class PreviewActivity extends AppCompatActivity {
 //                    log("mCodecManager is " + mCodecManager);
 //                }
 
+                startSDKRegistration();
             }
 
             @Override
@@ -106,6 +121,7 @@ public class PreviewActivity extends AppCompatActivity {
 
             }
         });
+
 
 
     }
@@ -186,6 +202,11 @@ public class PreviewActivity extends AppCompatActivity {
         System.out.println("~~button.stop~~");
 
 
+        preview();
+
+    }
+
+    private void preview() {
         if (!baseProduct.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
 
             VideoFeeder.getInstance()
@@ -193,12 +214,12 @@ public class PreviewActivity extends AppCompatActivity {
                     .addVideoDataListener(new VideoFeeder.VideoDataListener() {
                         @Override
                         public void onReceive(byte[] bytes, int i) {
-                            log("~~addVideoDataListener.onReceive~~");
-                            log("bytes is " + bytes.length);
-                            log("i is " + i);
+//                            log("~~addVideoDataListener.onReceive~~");
+//                            log("bytes is " + bytes.length);
+//                            log("i is " + i);
 
                             if (mCodecManager == null) {
-                                mCodecManager = new DJICodecManager(PreviewActivity.this, textureView.getSurfaceTexture(), textureView.getWidth(), textureView.getHeight());
+                                mCodecManager = new DJICodecManager(GimbalActivity.this, textureView.getSurfaceTexture(), textureView.getWidth(), textureView.getHeight());
                                 log("mCodecManager is " + mCodecManager);
                             } else {
                                 mCodecManager.sendDataToDecoder(bytes, i);
@@ -207,35 +228,55 @@ public class PreviewActivity extends AppCompatActivity {
                         }
                     });
         }
-
     }
 
     public void bind(View view) {
         System.out.println("~~button.bind~~");
 
-        captureAction();
+
+//        setMode();
+        getCapabilities();
+
+
+
+
+
 
     }
 
     public void unbind(View view) {
         System.out.println("~~button.unbind~~");
+        rotate();
     }
 
-    public void reloading(View view) {
-        System.out.println("~~button.reloading~~");
+    public void reset(View view) {
+        System.out.println("~~button.reset~~");
+
+//        reset();
+    }
+
+
+    public void pitch(View view) {
+        System.out.println("~~button.pitch~~");
+
+    }
+
+    public void roll(View view) {
+        System.out.println("~~button.roll~~");
 
     }
 
 
-    public void del(View view) {
-        System.out.println("~~button.del~~");
-
+    public void yaw(View view) {
+        System.out.println("~~button.yaw~~");
 
     }
 
 
     public void query(View view) {
         System.out.println("~~button.query~~");
+
+        setStateCallback();
 
     }
 
@@ -248,7 +289,7 @@ public class PreviewActivity extends AppCompatActivity {
                 log("registering, pls wait...");
 
                 log("registerApp start");
-                DJISDKManager.getInstance().registerApp(PreviewActivity.this.getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
+                DJISDKManager.getInstance().registerApp(GimbalActivity.this.getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
                     @Override
                     public void onRegister(DJIError djiError) {
                         log("~~SDKManagerCallback.onRegister~~");
@@ -279,7 +320,8 @@ public class PreviewActivity extends AppCompatActivity {
                             log("refreshSDK: True");
                             String str = baseProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
                             log("Status: " + str + " connected");
-                            PreviewActivity.this.baseProduct = baseProduct;
+                            GimbalActivity.this.baseProduct = baseProduct;
+                            preview();
 
                         } else {
                             log("refreshSDK: False");
@@ -344,110 +386,143 @@ public class PreviewActivity extends AppCompatActivity {
     }
 
 
-    private void captureAction() {
-        Camera camera = baseProduct.getCamera();
-        if (camera == null) return;
+    private void rotate() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
 
-        SettingsDefinitions.ShootPhotoMode photoMode = SettingsDefinitions.ShootPhotoMode.SINGLE;
-        camera.setShootPhotoMode(photoMode, new CommonCallbacks.CompletionCallback() {
+//        pitch = (pitch + 1.0f) % 30.0f;
+        roll = (roll - 0.5f) % 30.0f;
+//        yaw = (yaw + 1.0f) % 30.0f;
+
+
+        Rotation rotation = new Rotation.Builder()
+//                .pitch(pitch)
+                .roll(roll)
+//                .yaw(yaw)
+                .mode(RELATIVE_ANGLE)
+//                .mode(ABSOLUTE_ANGLE)
+                .build();
+        gimbal.rotate(rotation, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                System.out.println("~~setShootPhotoMode.onResult~~");
+                System.out.println("~~rotate.onResult~~");
                 if (djiError == null) {
-                    System.out.println("Switch Camera Mode Succeeded");
+                    System.out.println("rotate Succeeded");
                 } else {
                     System.out.println(djiError.getDescription());
                 }
             }
         });
 
-        camera.startShootPhoto(new CommonCallbacks.CompletionCallback() {
+//        gimbal.fineTuneRollInDegrees(roll +=1.0f, new CommonCallbacks.CompletionCallback() {
+//            @Override
+//            public void onResult(DJIError djiError) {
+//                System.out.println("~~rotate.onResult~~");
+//                if (djiError == null) {
+//                    System.out.println("rotate Succeeded");
+//                } else {
+//                    System.out.println(djiError.getDescription());
+//                }
+//            }
+//        });
+
+
+    }
+
+
+    private void reset() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
+
+        gimbal.reset(YAW, CENTER, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
-                System.out.println("~~startShootPhoto.onResult~~");
+                System.out.println("~~reset.onResult~~");
                 if (djiError == null) {
-                    System.out.println("startShootPhoto Succeeded");
+                    System.out.println("reset Succeeded");
                 } else {
                     System.out.println(djiError.getDescription());
                 }
+            }
+        });
 
+
+    }
+
+
+    private void setMode() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
+
+        gimbal.setMode(GimbalMode.FREE, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                System.out.println("~~setMode.onResult~~");
+                if (djiError == null) {
+                    System.out.println("setMode Succeeded");
+                } else {
+                    System.out.println(djiError.getDescription());
+                }
             }
         });
     }
 
 
-//    private void recordAction(SettingsDefinitions.CameraMode cameraMode) {
-//
-//        Camera camera = baseProduct.getCamera();
-//        if (camera == null) return;
-//
-//        SettingsDefinitions.ShootPhotoMode photoMode = SettingsDefinitions.ShootPhotoMode.SINGLE;
-//        camera.setShootPhotoMode(photoMode, new CommonCallbacks.CompletionCallback() {
-//            @Override
-//            public void onResult(DJIError djiError) {
-//                System.out.println("~~setShootPhotoMode.onResult~~");
-//                if (djiError == null) {
-//                    System.out.println("Switch Camera Mode Succeeded");
-//                } else {
-//                    System.out.println(djiError.getDescription());
-//                }
-//            }
-//        });
-//
-//        camera.startShootPhoto(new CommonCallbacks.CompletionCallback() {
-//            @Override
-//            public void onResult(DJIError djiError) {
-//                System.out.println("~~startShootPhoto.onResult~~");
-//                if (djiError == null) {
-//                    System.out.println("Switch Camera Mode Succeeded");
-//                } else {
-//                    System.out.println(djiError.getDescription());
-//                }
-//
-//            }
-//        });
-//
-//    }
 
-//        private void startRecord(){
-//
-//            final Camera camera = FPVDemoApplication.getCameraInstance();
-//            if (camera != null) {
-//                camera.startRecordVideo(new CommonCallbacks.CompletionCallback(){
-//                    @Override
-//                    public void onResult(DJIError djiError)
-//                    {
-//                        if (djiError == null) {
-//                            showToast("Record video: success");
-//                        }else {
-//                            showToast(djiError.getDescription());
-//                        }
-//                    }
-//                }); // Execute the startRecordVideo API
-//            }
-//        }
+    private void startCalibration() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
+
+        gimbal.startCalibration(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                System.out.println("~~startShootPhoto.onResult~~");
+                if (djiError == null) {
+                    System.out.println("startCalibration Succeeded");
+                } else {
+                    System.out.println(djiError.getDescription());
+                }
+            }
+        });
+    }
 
 
-//        private void stopRecord(){
-//
-//            Camera camera = FPVDemoApplication.getCameraInstance();
-//            if (camera != null) {
-//                camera.stopRecordVideo(new CommonCallbacks.CompletionCallback(){
-//
-//                    @Override
-//                    public void onResult(DJIError djiError)
-//                    {
-//                        if(djiError == null) {
-//                            showToast("Stop recording: success");
-//                        }else {
-//                            showToast(djiError.getDescription());
-//                        }
-//                    }
-//                }); // Execute the stopRecordVideo API
-//            }
-//
-//        }
-//    }
+    private void getCapabilities() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
+
+        Map<CapabilityKey, DJIParamCapability> map = gimbal.getCapabilities();
+        System.out.println(map);
+    }
+
+
+    private void setStateCallback() {
+        Gimbal gimbal = baseProduct.getGimbal();
+        if (gimbal == null) return;
+
+        gimbal.setStateCallback(new GimbalState.Callback() {
+            @Override
+            public void onUpdate(GimbalState gimbalState) {
+                System.out.println("~~setStateCallback.onUpdate~~");
+                System.out.println("getYawRelativeToAircraftHeading is " + gimbalState.getYawRelativeToAircraftHeading());
+                System.out.println("getAttitudeInDegrees is " + gimbalState.getAttitudeInDegrees());
+                System.out.println("getRollFineTuneInDegrees is " + gimbalState.getRollFineTuneInDegrees());
+                System.out.println("getPitchFineTuneInDegrees is " + gimbalState.getPitchFineTuneInDegrees());
+                System.out.println("getYawFineTuneInDegrees is " + gimbalState.getYawFineTuneInDegrees());
+                System.out.println("getMode is " + gimbalState.getMode());
+                System.out.println("getCalibrationProgress is " + gimbalState.getCalibrationProgress());
+                System.out.println("getPitchBalanceTestResult is " + gimbalState.getPitchBalanceTestResult());
+                System.out.println("getRollBalanceTestResult is " + gimbalState.getRollBalanceTestResult());
+                System.out.println("getBalanceState is " + gimbalState.getBalanceState());
+                gimbal.setStateCallback(null);
+            }
+        });
+    }
+
+
+
+
+
 
 }
 

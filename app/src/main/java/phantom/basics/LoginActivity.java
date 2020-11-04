@@ -31,7 +31,7 @@ import static android.widget.Toast.LENGTH_LONG;
  * Description:
  * History:
  */
-public class UIActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private AppActivationManager appActivationManager;
     private AppActivationState.AppActivationStateListener activationStateListener;
@@ -208,7 +208,7 @@ public class UIActivity extends AppCompatActivity {
     public void del(View view) {
         System.out.println("~~button.del~~");
 
-
+        System.out.println(view);
 
     }
 

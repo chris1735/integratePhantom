@@ -36,7 +36,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Integrate">
 
-
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
 
         <!-- DJI SDK -->
         <uses-library android:name="com.android.future.usb.accessory" />
@@ -65,7 +65,7 @@
         </activity>
 
 
-        <activity android:name=".UIActivity">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -82,6 +82,14 @@
 
 
         <activity android:name=".UXActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+
+        <activity android:name=".GimbalActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
