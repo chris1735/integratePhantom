@@ -54,10 +54,13 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
 
+    implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'com.dji:dji-sdk:4.13.1'
     compileOnly 'com.dji:dji-sdk-provided:4.13.1'
 
-    implementation ('com.dji:dji-uxsdk:4.12')
+//    implementation 'com.dji:dji-uxsdk:4.12'
+
+
 
 }

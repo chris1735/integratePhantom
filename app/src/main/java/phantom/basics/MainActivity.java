@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         mHandler = new Handler(Looper.getMainLooper());
 
         textView = findViewById(R.id.textView);
+        textView.setText("hasSDKRegistered is " + DJISDKManager.getInstance().hasSDKRegistered());
 
 
         ViewGroup viewGroup = findViewById(R.id.ll);
@@ -87,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
                 PreviewActivity.class,
                 LoginActivity.class,
                 GimbalActivity.class,
+                FlightControllerActivity.class,
+                MissionControllerActivity.class,
         };
 
         for (int i = 0; i < classes.length; i++) {
@@ -163,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         System.out.println("*********  " + getClass().getSimpleName() + ".onDestroy  *********");
+
+        DJISDKManager.getInstance().stopConnectionToProduct();
+//        DJISDKManager.getInstance().destroy();
+
     }
 
 

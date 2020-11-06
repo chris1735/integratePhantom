@@ -29,6 +29,8 @@ import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
 
+import static dji.common.camera.SettingsDefinitions.CameraMode.SHOOT_PHOTO;
+
 /**
  * Copyright (C) 湖北无垠智探科技发展有限公司
  * Author: zuoz
@@ -184,30 +186,30 @@ public class PreviewActivity extends AppCompatActivity {
 
     public void stop(View view) {
         System.out.println("~~button.stop~~");
+        preview();
+    }
 
+    private void preview() {
+        if (baseProduct.getModel().equals(Model.UNKNOWN_AIRCRAFT)) return;
 
-        if (!baseProduct.getModel().equals(Model.UNKNOWN_AIRCRAFT)) {
+        VideoFeeder.getInstance()
+                .getPrimaryVideoFeed()
+                .addVideoDataListener(new VideoFeeder.VideoDataListener() {
+                    @Override
+                    public void onReceive(byte[] bytes, int i) {
+                        log("~~addVideoDataListener.onReceive~~");
+                        log("bytes is " + bytes.length);
+                        log("i is " + i);
 
-            VideoFeeder.getInstance()
-                    .getPrimaryVideoFeed()
-                    .addVideoDataListener(new VideoFeeder.VideoDataListener() {
-                        @Override
-                        public void onReceive(byte[] bytes, int i) {
-                            log("~~addVideoDataListener.onReceive~~");
-                            log("bytes is " + bytes.length);
-                            log("i is " + i);
-
-                            if (mCodecManager == null) {
-                                mCodecManager = new DJICodecManager(PreviewActivity.this, textureView.getSurfaceTexture(), textureView.getWidth(), textureView.getHeight());
-                                log("mCodecManager is " + mCodecManager);
-                            } else {
-                                mCodecManager.sendDataToDecoder(bytes, i);
-                            }
-
+                        if (mCodecManager == null) {
+                            mCodecManager = new DJICodecManager(PreviewActivity.this, textureView.getSurfaceTexture(), textureView.getWidth(), textureView.getHeight());
+                            log("mCodecManager is " + mCodecManager);
+                        } else {
+                            mCodecManager.sendDataToDecoder(bytes, i);
                         }
-                    });
-        }
 
+                    }
+                });
     }
 
     public void bind(View view) {
@@ -280,6 +282,7 @@ public class PreviewActivity extends AppCompatActivity {
                             String str = baseProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
                             log("Status: " + str + " connected");
                             PreviewActivity.this.baseProduct = baseProduct;
+                            preview();
 
                         } else {
                             log("refreshSDK: False");
@@ -348,31 +351,27 @@ public class PreviewActivity extends AppCompatActivity {
         Camera camera = baseProduct.getCamera();
         if (camera == null) return;
 
+//        camera.getMode(new CommonCallbacks.CompletionCallbackWith<SettingsDefinitions.CameraMode>() {
+//            @Override
+//            public void onSuccess(SettingsDefinitions.CameraMode cameraMode) {
+//                System.out.println("~~getMode.onSuccess~~");
+//                System.out.println(cameraMode.value());
+//            }
+//
+//            @Override
+//            public void onFailure(DJIError djiError) {
+//                System.out.println("~~getMode.onFailure~~");
+//                System.out.println(djiError.getDescription());
+//            }
+//        });
+
+
+        camera.setMode(SHOOT_PHOTO, new Utility.Callback("setMode"));
+
         SettingsDefinitions.ShootPhotoMode photoMode = SettingsDefinitions.ShootPhotoMode.SINGLE;
-        camera.setShootPhotoMode(photoMode, new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                System.out.println("~~setShootPhotoMode.onResult~~");
-                if (djiError == null) {
-                    System.out.println("Switch Camera Mode Succeeded");
-                } else {
-                    System.out.println(djiError.getDescription());
-                }
-            }
-        });
+        camera.setShootPhotoMode(photoMode, new Utility.Callback("setShootPhotoMode"));
 
-        camera.startShootPhoto(new CommonCallbacks.CompletionCallback() {
-            @Override
-            public void onResult(DJIError djiError) {
-                System.out.println("~~startShootPhoto.onResult~~");
-                if (djiError == null) {
-                    System.out.println("startShootPhoto Succeeded");
-                } else {
-                    System.out.println(djiError.getDescription());
-                }
-
-            }
-        });
+        camera.startShootPhoto(new Utility.Callback("startShootPhoto"));
     }
 
 
@@ -448,6 +447,5 @@ public class PreviewActivity extends AppCompatActivity {
 //
 //        }
 //    }
-
 }
 
