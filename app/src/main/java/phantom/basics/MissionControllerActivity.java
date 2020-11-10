@@ -72,8 +72,6 @@ public class MissionControllerActivity extends AppCompatActivity {
     private String json = "[{\"id\": \"402881ee74d22f740174d3e77d4a00c2\", \"order\": 1, \"latitude\": 30.57702304651146, \"longitude\": 114.3255631585092 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c3\", \"order\": 2, \"latitude\": 30.578875819096854, \"longitude\": 114.32554463016572 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c4\", \"order\": 3, \"latitude\": 30.578948016673394, \"longitude\": 114.32494360878181 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c5\", \"order\": 4, \"latitude\": 30.57715219691913, \"longitude\": 114.32496156757799 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c6\", \"order\": 5, \"latitude\": 30.5772813473268, \"longitude\": 114.32435997664678 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c7\", \"order\": 6, \"latitude\": 30.579020214249933, \"longitude\": 114.3243425873979 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c8\", \"order\": 7, \"latitude\": 30.579092411826473, \"longitude\": 114.32374156601398 }, {\"id\": \"402881ee74d22f740174d3e77d4a00c9\", \"order\": 8, \"latitude\": 30.577410497734473, \"longitude\": 114.32375838571555 }, {\"id\": \"402881ee74d22f740174d3e77d4a00ca\", \"order\": 9, \"latitude\": 30.57753964814215, \"longitude\": 114.32315679478434 }, {\"id\": \"402881ee74d22f740174d3e77d4a00cb\", \"order\": 10, \"latitude\": 30.579164609403016, \"longitude\": 114.32314054463006 }, {\"id\": \"402881ee74d22f740174d3e77d4a00cc\", \"order\": 11, \"latitude\": 30.579236806979555, \"longitude\": 114.32253952324612 }, {\"id\": \"402881ee74d22f740174d3e77d4a00cd\", \"order\": 12, \"latitude\": 30.577668798549816, \"longitude\": 114.32255520385311 }, {\"id\": \"402881ee74d22f740174d3e77d4a00ce\", \"order\": 13, \"latitude\": 30.57779794895749, \"longitude\": 114.32195361292189 }, {\"id\": \"402881ee74d22f740174d3e77d4a00cf\", \"order\": 14, \"latitude\": 30.579309004556094, \"longitude\": 114.3219385018622 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d0\", \"order\": 15, \"latitude\": 30.579381202132637, \"longitude\": 114.3213374804783 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d1\", \"order\": 16, \"latitude\": 30.57792709936516, \"longitude\": 114.32135202199069 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d2\", \"order\": 17, \"latitude\": 30.57805624977283, \"longitude\": 114.32075043105948 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d3\", \"order\": 18, \"latitude\": 30.57925195973024, \"longitude\": 114.3207384735613 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d4\", \"order\": 19, \"latitude\": 30.57853037505251, \"longitude\": 114.32014539026454 }, {\"id\": \"402881ee74d22f740174d3e77d4a00d5\", \"order\": 20, \"latitude\": 30.5781854001805, \"longitude\": 114.32014884012825 }]";
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         System.out.println("*********  " + getClass().getSimpleName() + ".onCreate  *********");
@@ -104,7 +102,7 @@ public class MissionControllerActivity extends AppCompatActivity {
                 log("width is " + width);
                 log("height is " + height);
 
-                startSDKRegistration();
+//                startSDKRegistration();
             }
 
             @Override
@@ -132,11 +130,6 @@ public class MissionControllerActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-
-
 
 
 
@@ -252,11 +245,11 @@ public class MissionControllerActivity extends AppCompatActivity {
         System.out.println(wayPointJsons);
 
 
-
     }
 
     public void roll(View view) {
         System.out.println("~~button.roll~~");
+        startSDKRegistration();
 
     }
 
@@ -375,7 +368,7 @@ public class MissionControllerActivity extends AppCompatActivity {
                             String str = baseProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
                             log("Status: " + str + " connected");
                             MissionControllerActivity.this.baseProduct = baseProduct;
-                            preview();
+//                            preview();
 
                         } else {
                             log("refreshSDK: False");
@@ -668,7 +661,7 @@ public class MissionControllerActivity extends AppCompatActivity {
             public void onExecutionStart() {
                 System.out.println("~~onExecutionStart~~");
 
-                System.out.println("~~                System");
+                System.out.println("~~System");
             }
 
             @Override
@@ -687,10 +680,10 @@ public class MissionControllerActivity extends AppCompatActivity {
                 .flightPathMode(NORMAL);
 
 
+        builder.addWaypoint(new Waypoint(30.5769d, 114.3218d, 80f))
+        .addWaypoint(new Waypoint(30.57702304651146d, 114.3255631585092d, 80f));
 
 
-//                .addWaypoint(new Waypoint(30.560490366325354d, 114.17113285136377d, 80f))
-//                .addWaypoint(new Waypoint(30.643041964027052d, 114.18724577267663d, 80f));
 
         System.out.println("size is " + builder.getWaypointList().size());
         System.out.println("getWaypointCount is " + builder.getWaypointCount());
@@ -701,10 +694,13 @@ public class MissionControllerActivity extends AppCompatActivity {
             return;
         }
 
+        operator.uploadMission(new Utility.Callback("uploadMission"));
+
 
         WaypointMissionState state = operator.getCurrentState();
         System.out.println(state);
-//
+
+
 //        switch (state) {
 //            case WaypointMissionState.UPLOADING:
 //                System.out.println("");break;
@@ -715,12 +711,8 @@ public class MissionControllerActivity extends AppCompatActivity {
 //        }
 
 
-
-//        operator.startMission(new Utility.Callback("startMission"));
+        operator.startMission(new Utility.Callback("startMission"));
     }
-
-
-
 
 
 }
