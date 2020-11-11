@@ -28,9 +28,14 @@ import dji.common.gimbal.CapabilityKey;
 import dji.common.gimbal.GimbalMode;
 import dji.common.gimbal.Rotation;
 import dji.common.mission.waypoint.Waypoint;
+import dji.common.mission.waypoint.WaypointAction;
+import dji.common.mission.waypoint.WaypointActionType;
 import dji.common.mission.waypoint.WaypointMission;
 import dji.common.mission.waypoint.WaypointMissionDownloadEvent;
 import dji.common.mission.waypoint.WaypointMissionExecutionEvent;
+import dji.common.mission.waypoint.WaypointMissionFlightPathMode;
+import dji.common.mission.waypoint.WaypointMissionGotoWaypointMode;
+import dji.common.mission.waypoint.WaypointMissionHeadingMode;
 import dji.common.mission.waypoint.WaypointMissionState;
 import dji.common.mission.waypoint.WaypointMissionUploadEvent;
 import dji.common.product.Model;
@@ -55,6 +60,7 @@ import static dji.common.mission.waypoint.WaypointMissionFinishedAction.NO_ACTIO
 import static dji.common.mission.waypoint.WaypointMissionFlightPathMode.NORMAL;
 import static dji.common.mission.waypoint.WaypointMissionHeadingMode.AUTO;
 import static dji.common.mission.waypoint.WaypointMissionState.NOT_SUPPORTED;
+import static dji.common.mission.waypoint.WaypointMissionState.READY_TO_EXECUTE;
 
 /**
  * Copyright (C) 湖北无垠智探科技发展有限公司
@@ -472,9 +478,6 @@ public class MissionControllerActivity extends AppCompatActivity {
     }
 
 
-    private void reset() {
-    }
-
 
     private void setMode() {
         Gimbal gimbal = baseProduct.getGimbal();
@@ -639,35 +642,42 @@ public class MissionControllerActivity extends AppCompatActivity {
             @Override
             public void onDownloadUpdate(WaypointMissionDownloadEvent waypointMissionDownloadEvent) {
                 System.out.println("~~onDownloadUpdate~~");
-                System.out.println("~~waypointMissionDownloadEvent");
+                System.out.println("waypointMissionDownloadEvent is " + waypointMissionDownloadEvent);
+                WaypointMissionState state = operator.getCurrentState();
+                System.out.println(state);
 
             }
 
             @Override
             public void onUploadUpdate(WaypointMissionUploadEvent waypointMissionUploadEvent) {
                 System.out.println("~~onUploadUpdate~~");
-                System.out.println("~~waypointMissionUploadEvent");
+                System.out.println("waypointMissionUploadEvent is " + waypointMissionUploadEvent);
+
+                if(waypointMissionUploadEvent.getCurrentState().equals(READY_TO_EXECUTE))
+                operator.startMission(new Utility.Callback("startMission"));
+
 
             }
 
             @Override
             public void onExecutionUpdate(WaypointMissionExecutionEvent waypointMissionExecutionEvent) {
                 System.out.println("~~onExecutionUpdate~~");
-                System.out.println("~~waypointMissionExecutionEvent");
+                System.out.println("waypointMissionExecutionEvent is " + waypointMissionExecutionEvent);
+                System.out.println("totalWaypointCount is " + waypointMissionExecutionEvent.getProgress().totalWaypointCount);
 
             }
 
             @Override
             public void onExecutionStart() {
                 System.out.println("~~onExecutionStart~~");
-
-                System.out.println("~~System");
             }
 
             @Override
             public void onExecutionFinish(DJIError djiError) {
                 System.out.println("~~onExecutionFinish~~");
-                System.out.println("~~ {");
+                System.out.println("djiError is " + djiError);
+
+                operator.removeListener(this);
 
             }
         });
@@ -679,9 +689,36 @@ public class MissionControllerActivity extends AppCompatActivity {
                 .maxFlightSpeed(15f)
                 .flightPathMode(NORMAL);
 
+//        .headingMode(WaypointMissionHeadingMode.CONTROL_BY_REMOTE_CONTROLLER)
+//                .gotoFirstWaypointMode(WaypointMissionGotoWaypointMode.SAFELY)
 
-        builder.addWaypoint(new Waypoint(30.5769d, 114.3218d, 80f))
-        .addWaypoint(new Waypoint(30.57702304651146d, 114.3255631585092d, 80f));
+
+
+
+
+
+
+        float hight = 50f;
+        Waypoint waypoint = null;
+        WaypointAction waypointAction1 = new WaypointAction(WaypointActionType.ROTATE_AIRCRAFT, -90);
+        WaypointAction waypointAction2 = new WaypointAction(WaypointActionType.GIMBAL_PITCH, -90);
+
+        waypoint = new Waypoint(30.5769d, 114.3218d, hight);
+        waypoint.addAction(waypointAction1);
+        waypoint.addAction(waypointAction2);
+        builder.addWaypoint(waypoint);
+
+
+        waypoint = new Waypoint(30.57702304651146d, 114.3255631585092d, hight);
+        waypoint.addAction(waypointAction1);
+        waypoint.addAction(waypointAction2);
+        builder.addWaypoint(waypoint);
+
+        waypoint = new Waypoint(30.5769d, 114.3218d, hight);
+        waypoint.addAction(waypointAction1);
+        waypoint.addAction(waypointAction2);
+        builder.addWaypoint(waypoint);
+
 
 
 
@@ -697,8 +734,8 @@ public class MissionControllerActivity extends AppCompatActivity {
         operator.uploadMission(new Utility.Callback("uploadMission"));
 
 
-        WaypointMissionState state = operator.getCurrentState();
-        System.out.println(state);
+
+
 
 
 //        switch (state) {
@@ -711,7 +748,7 @@ public class MissionControllerActivity extends AppCompatActivity {
 //        }
 
 
-        operator.startMission(new Utility.Callback("startMission"));
+//        operator.startMission(new Utility.Callback("startMission"));
     }
 
 
