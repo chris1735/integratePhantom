@@ -706,6 +706,7 @@ public class MissionControllerActivity extends AppCompatActivity {
         waypoint = new Waypoint(30.5769d, 114.3218d, hight);
         waypoint.addAction(waypointAction1);
         waypoint.addAction(waypointAction2);
+        waypoint.shootPhotoTimeInterval = 300f;
         builder.addWaypoint(waypoint);
 
 
